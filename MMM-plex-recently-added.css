@@ -1,0 +1,38 @@
+.MMM-plex-recently-added .recentlyAddedList {
+  width: 100%;
+  height: 257px;
+  overflow: hidden;
+  color: #FFF;
+  list-style: none;
+  padding: 0;
+}
+
+.MMM-plex-recently-added .item {
+  float: left;
+  width: 131px;
+  height: 257px;
+  list-style: none;
+  margin-right: 5px;
+}
+
+.MMM-plex-recently-added .item .poster {
+  height: 197px;
+}
+
+.MMM-plex-recently-added .item .metadata {
+  padding-top: 5px;
+  font-size: 0.5em;
+  line-height: 1.2em;
+  text-align: left;
+}
+
+.MMM-plex-recently-added .item .metadata div {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.MMM-plex-recently-added .item .movie .title,
+.MMM-plex-recently-added .item .episode .grandparentTitle {
+  font-weight: 600;
+}
