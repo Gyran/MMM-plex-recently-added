@@ -7,12 +7,16 @@
   padding: 0;
 }
 
+.MMM-plex-recently-added .item:first-child {
+  margin-left: 0;
+}
+
 .MMM-plex-recently-added .item {
   float: left;
-  width: 131px;
+  width: 130px;
   height: 257px;
   list-style: none;
-  margin-right: 5px;
+  margin-left: 3px;
 }
 
 .MMM-plex-recently-added .item .poster {
