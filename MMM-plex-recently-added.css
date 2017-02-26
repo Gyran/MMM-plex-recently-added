@@ -13,10 +13,10 @@
 
 .MMM-plex-recently-added .item {
   float: left;
-  width: 130px;
+  width: 125px;
   height: 257px;
   list-style: none;
-  margin-left: 3px;
+  margin-left: 5px;
 }
 
 .MMM-plex-recently-added .item .poster {
