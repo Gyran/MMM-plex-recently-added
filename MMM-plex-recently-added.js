@@ -16,7 +16,7 @@ Module.register('MMM-plex-recently-added', {
   defaults: {
     updateInterval: 10 * 60 * 1000,
     types: ['movie', 'episode'],
-    displayType: DISPLAY_TYPES.SEPARATE,
+    displayType: DISPLAY_TYPES.MIXED,
     limit: 20,
     token: '',
     hostname: '127.0.0.1',
@@ -62,7 +62,27 @@ Module.register('MMM-plex-recently-added', {
   },
 
   _getMixedDisplayDom() {
+    var self = this;
+    var wrapper = document.createElement('div');
 
+    // Merge all types to one
+    var items
+      = this.config.types.reduce(function (all, type) {
+        var typeItems = self.recentlyAdded[type];
+        if (Array.isArray(typeItems)) {
+          return all.concat(typeItems);
+        }
+
+        return all;
+      }, [])
+      .sort(function (a, b) {
+        return b.addedAt - a.addedAt;
+      });
+
+    recentlyAddedListDom = self._getRecentlyAddedListDom(items);
+    wrapper.appendChild(recentlyAddedListDom);
+
+    return wrapper;
   },
 
   _getSeperateDisplayDom() {
