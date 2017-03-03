@@ -5,12 +5,18 @@ var NOTIFICATIONS = {
   ERROR: 'ERROR',
 };
 
+var DISPLAY_TYPES = {
+  MIXED: 'mixed',
+  SEPARATE: 'separate',
+}
+
 Module.register('MMM-plex-recently-added', {
   recentlyAdded: {},
 
   defaults: {
     updateInterval: 10 * 60 * 1000,
     types: ['movie', 'episode'],
+    displayType: DISPLAY_TYPES.SEPARATE,
     limit: 20,
     token: '',
     hostname: '127.0.0.1',
@@ -36,6 +42,30 @@ Module.register('MMM-plex-recently-added', {
   },
 
   getDom() {
+    var displayType = this.config.displayType;
+
+    if (displayType === DISPLAY_TYPES.MIXED) {
+      return this._getMixedDisplayDom();
+    } else if (displayType === DISPLAY_TYPES.SEPARATE) {
+      return this._getSeperateDisplayDom();
+    }
+
+    return this._getConfigErrorDom();
+  },
+
+  _getConfigErrorDom() {
+    var wrapper = document.createElement('div');
+
+    wrapper.innerText = 'Check MMM-plex-recently-added config';
+
+    return wrapper;
+  },
+
+  _getMixedDisplayDom() {
+
+  },
+
+  _getSeperateDisplayDom() {
     var self = this;
     var wrapper = document.createElement('div');
 
