@@ -17,7 +17,7 @@ module.exports = (config) => {
     var typeNum = TYPE_MAP[type];
 
     return new Promise(function (resolve, reject) {
-      client.query('/hubs/home/recentlyAdded?type=' + typeNum + '&limit=' + limit)
+      client.query('/hubs/home/recentlyAdded?type=' + typeNum + '&X-Plex-Container-Start=0&X-Plex-Container-Size=' + limit)
         .then(function (result) {
           var data = result.MediaContainer.Metadata
             .filter((item) => item.type === type);
