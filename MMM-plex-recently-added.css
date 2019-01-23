@@ -5,18 +5,16 @@
   color: #FFF;
   list-style: none;
   padding: 0;
-}
 
-.MMM-plex-recently-added .item:first-child {
-  margin-left: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
 .MMM-plex-recently-added .item {
-  float: left;
   width: 125px;
   height: 257px;
   list-style: none;
-  margin-left: 5px;
 }
 
 .MMM-plex-recently-added .item .poster {
