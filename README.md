@@ -28,3 +28,4 @@ Shows posters of the recently added items for your Plex Media Server.
 | `types` | `['movie', 'episode']` | Which types of recently added medias should be shown and in which order. Possible values are `movie` and `episode`. |
 | `limit` | `20` | Maximum number of items to show. (this is mostly to not receive to many items from the server) |
 | `updateInterval` | `10 * 60 * 1000` (10 minutes) | Interval new data should be fetched. |
+| `displayType` | `mixed` | If item types should be mixed or put in separate lists. Possible values are `mixed` and `separate` |
