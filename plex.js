@@ -3,11 +3,13 @@ var PlexAPI = require("plex-api");
 var TYPES = {
   MOVIE: 'movie',
   EPISODE: 'episode',
+  SEASON: 'season'
 };
 
 var TYPE_MAP = {
   [TYPES.MOVIE]: '1',
   [TYPES.EPISODE]: '2',
+  [TYPES.SEASON]: '2',
 };
 
 module.exports = (config) => {
