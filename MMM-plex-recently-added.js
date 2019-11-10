@@ -102,7 +102,7 @@ Module.register('MMM-plex-recently-added', {
 
   _getThumbUrl(item) {
     var thumbKey = 'thumb';
-    if (item.type === 'episode' | item.type === 'season') {
+    if (item.type === 'episode' || item.type === 'season') {
 		if (item.grandparentThumb){
 		thumbKey = 'grandparentThumb';
 		}
