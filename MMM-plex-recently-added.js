@@ -15,7 +15,7 @@ Module.register('MMM-plex-recently-added', {
 
   defaults: {
     updateInterval: 10 * 60 * 1000,
-    types: ['movie', 'episode'],
+    types: ['movie', 'episode', 'season'],
     displayType: DISPLAY_TYPES.MIXED,
     limit: 20,
     token: '',
@@ -102,8 +102,13 @@ Module.register('MMM-plex-recently-added', {
 
   _getThumbUrl(item) {
     var thumbKey = 'thumb';
-    if (item.type === 'episode') {
+    if (item.type === 'episode' || item.type === 'season') {
+		if (item.grandparentThumb){
+		thumbKey = 'grandparentThumb';
+		}
+		else{
       thumbKey = 'parentThumb';
+		}
     }
     return 'http://' + this.config.hostname + ':' + this.config.port + item[thumbKey] + '?X-Plex-Token=' + this.config.token;
   },
@@ -131,6 +136,13 @@ Module.register('MMM-plex-recently-added', {
       var SeasonEpisodeDom = document.createElement('div');
       SeasonEpisodeDom.classList.add('SeasonEpisode');
       SeasonEpisodeDom.innerText = 'S' + item.parentIndex + ' E' + item.index;
+      metadataDom.appendChild(SeasonEpisodeDom);
+	}
+    if (type === 'season') {
+	  this._appendMetadataField(metadataDom, item, 'parentTitle');
+      var SeasonEpisodeDom = document.createElement('div');
+      SeasonEpisodeDom.classList.add('SeasonEpisode');
+      SeasonEpisodeDom.innerText = item.leafCount + ' Episodes';
       metadataDom.appendChild(SeasonEpisodeDom);
     } else {
       this._appendMetadataField(metadataDom, item, 'title');

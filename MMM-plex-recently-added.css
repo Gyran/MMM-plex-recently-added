@@ -35,6 +35,6 @@
 }
 
 .MMM-plex-recently-added .item .movie .title,
-.MMM-plex-recently-added .item .episode .grandparentTitle {
+.MMM-plex-recently-added .item .episode .grandparentTitle, .MMM-plex-recently-added .item .season .parentTitle {
   font-weight: 600;
 }
