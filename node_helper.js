@@ -1,9 +1,11 @@
-const http = require('http');
+const http = require('node:http');
 const NodeHelper = require('node_helper');
 const Log = require('logger');
 const { XMLParser } = require('fast-xml-parser');
 
-const TEN_MINUTES = 10 * 60 * 1000;
+const ONE_MINUTE_MS = 60 * 1000;
+const TEN_MINUTES_MS = 10 * ONE_MINUTE_MS;
+const ONE_DAY_MS = 1 * 24 * 60 * ONE_MINUTE_MS;
 
 const Notifications = {
   CONFIG: 'CONFIG',
@@ -21,10 +23,10 @@ const PlexTypes = {
   [Types.TV]: '2',
 };
 
-const fetchData = (url, data) => {
+const fetchData = (url, options = {}) => {
   return new Promise((resolve, reject) => {
     http
-      .get(url, (res) => {
+      .get(url, options, (res) => {
         let responseBody = '';
 
         res.on('data', (chunk) => {
@@ -56,9 +58,9 @@ module.exports = NodeHelper.create({
   },
 
   async socketNotificationReceived(notification, payload) {
+    Log.info(`${this.name}: socketNotificationReceived ${notification}`);
     if (notification === Notifications.CONFIG && !this.client) {
       this.config = payload;
-      Log.info(`${this.name}: socketNotificationReceived`);
 
       // Process fetch for the first time
       this.process();
@@ -70,24 +72,24 @@ module.exports = NodeHelper.create({
 
     this.updateTimer = setTimeout(() => {
       this.process();
-    }, Math.max(delayMs, TEN_MINUTES));
+    }, Math.max(delayMs, TEN_MINUTES_MS));
   },
 
   process() {
-    // Fetch data for each types regardless if we need it or not
-    for (const type in Types) {
-      this.fetchFromPlex(Types[type]);
+    for (const type of this.config.types) {
+      this.fetchFromPlex(type);
     }
 
     // schedule the next fetch
-    this.scheduleNextFetch(this.config.updateIntervalInMinute * 60 * 1000);
+    this.scheduleNextFetch(this.config.updateIntervalInMinute * ONE_MINUTE_MS);
   },
 
   async fetchFromPlex(type) {
     const plexType = PlexTypes[type];
     const url = new URL(
-      `http://${this.config.hostname}:${this.config.port}/hubs/home/recentlyAdded?type=${plexType}`,
+      `http://${this.config.hostname}:${this.config.port}/hubs/home/recentlyAdded`,
     );
+    url.searchParams.append('type', plexType);
     if (this.config.token) {
       url.searchParams.append('X-Plex-Token', this.config.token);
     }
@@ -95,7 +97,12 @@ module.exports = NodeHelper.create({
     Log.info(`${this.name}: fetching ${url}`);
 
     try {
-      const data = await fetchData(url);
+      const data = await fetchData(url, {
+        headers: {
+          'X-Plex-Container-Start': '0',
+          'X-Plex-Container-Size': this.config.limit * 2, // fetch a few more so that we hopefully get enough
+        },
+      });
       if (
         !data ||
         !data.MediaContainer ||
@@ -105,50 +112,22 @@ module.exports = NodeHelper.create({
         throw new Error(`No items found for ${type}, check Plex Token`);
       }
 
-      const items = [];
-      let i = 0;
-      const { limit } = this.config;
+      const now = new Date();
+      let newerThanDate = new Date(
+        now.getTime() - this.config.newerThanDay * ONE_DAY_MS,
+      );
 
-      for await (const item of data.MediaContainer.Video) {
-        if (i >= limit) {
-          break;
-        }
+      const items = data.MediaContainer.Video.filter((item) => {
+        const itemAddedDate = new Date(item.addedAt * 1000);
 
-        // skip records if too old and setting is enabled
-        if (this.config.newerThanDay) {
-          const isOlderThanDay = (() => {
-            const now = new Date();
-            const pastDate = new Date(
-              now.getTime() - this.config.newerThanDay * 24 * 60 * 60 * 1000,
-            );
-            const itemAddedDate = item.addedAt * 1000;
-            return itemAddedDate <= pastDate.getTime();
-          })();
+        return itemAddedDate >= newerThanDate;
+      });
 
-          if (isOlderThanDay) {
-            continue;
-          }
-        }
-
-        items.push({
-          title: item.title,
-          parentTitle: item.parentTitle,
-          grandparentTitle: item.grandparentTitle,
-          index: item.index,
-          parentIndex: item.parentIndex,
-          year: item.year,
-          type: item.type,
-          thumb: item.thumb,
-          grandparentThumb: item.grandparentThumb,
-          parentThumb: item.parentThumb,
-          addedAt: item.addedAt,
-          originallyAvailableAt: item.originallyAvailableAt,
-        });
-        i++;
-      }
-
-      Log.info(`${this.name}: found ${items.length} items`);
-      this.sendSocketNotification(Notifications.DATA, { type, items });
+      Log.info(`${this.name}: found ${items.length} items for type ${type}`);
+      this.sendSocketNotification(Notifications.DATA, {
+        type,
+        items: items.slice(0, this.config.limit),
+      });
     } catch (error) {
       Log.error(error);
       this.sendSocketNotification(Notifications.ERROR, {
