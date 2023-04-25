@@ -83,7 +83,7 @@ module.exports = NodeHelper.create({
 
   async fetchFromPlex (type) {
     const plexType = PlexTypes[type]
-    const url = new URL(`http://${this.config.hostname}:${this.config.port}/library/sections/${plexType}/recentlyAdded`)
+    const url = new URL(`http://${this.config.hostname}:${this.config.port}/hubs/home/recentlyAdded?type=${plexType}`)
     if (this.config.token) {
       url.searchParams.append('X-Plex-Token', this.config.token)
     }
