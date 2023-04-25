@@ -1,14 +1,13 @@
-
 const Notifications = {
   CONFIG: 'CONFIG',
   DATA: 'DATA',
-  ERROR: 'ERROR'
-}
+  ERROR: 'ERROR',
+};
 
 const DisplayTypes = {
   MIXED: 'mixed',
-  SEPARATE: 'separate'
-}
+  SEPARATE: 'separate',
+};
 
 Module.register('MMM-plex-recently-added', {
   recentlyAdded: {},
@@ -22,220 +21,222 @@ Module.register('MMM-plex-recently-added', {
     token: '',
     newerThanDay: 30,
     hostname: '127.0.0.1',
-    port: '32400'
+    port: '32400',
   },
 
   start: function () {
-    Log.info(`Starting module: ${this.name}`)
-    this.sendSocketNotification('CONFIG', this.config)
+    Log.info(`Starting module: ${this.name}`);
+    this.sendSocketNotification('CONFIG', this.config);
   },
 
   socketNotificationReceived: function (notification, payload) {
-    Log.info(`${this.name}: socketNotificationReceived`)
+    Log.info(`${this.name}: socketNotificationReceived`);
     if (notification === Notifications.DATA) {
-      this.recentlyAdded[payload.type] = payload.items
-      this.updateDom()
+      this.recentlyAdded[payload.type] = payload.items;
+      this.updateDom();
     } else if (notification === Notifications.ERROR) {
-      Log.error(`${this.name}:`, payload.error)
+      Log.error(`${this.name}:`, payload.error);
     }
   },
 
   getStyles: function () {
-    return ['MMM-plex-recently-added.css']
+    return ['MMM-plex-recently-added.css'];
   },
 
-  getDom () {
-    const displayType = this.config.displayType
+  getDom() {
+    const displayType = this.config.displayType;
 
     if (Object.keys(this.recentlyAdded).length) {
       if (displayType === DisplayTypes.MIXED) {
-        return this.getMixedDisplayDom()
+        return this.getMixedDisplayDom();
       }
 
       if (displayType === DisplayTypes.SEPARATE) {
-        return this.getSeperateDisplayDom()
+        return this.getSeperateDisplayDom();
       }
     }
 
-    return this.getMessageDom('loading...')
+    return this.getMessageDom('loading...');
   },
 
-  getMessageDom (message) {
-    const wrapper = document.createElement('div')
-    wrapper.innerText = `${this.name}: ${message}`
+  getMessageDom(message) {
+    const wrapper = document.createElement('div');
+    wrapper.innerText = `${this.name}: ${message}`;
 
-    return wrapper
+    return wrapper;
   },
 
-  async getMixedDisplayDom () {
-    const types = this.config.types
-    const wrapper = document.createElement('div')
+  async getMixedDisplayDom() {
+    const types = this.config.types;
+    const wrapper = document.createElement('div');
 
     // Merge all types to one
-    const items = []
+    const items = [];
     for (const type in types) {
-      const tmp = this.recentlyAdded[types[type]]
+      const tmp = this.recentlyAdded[types[type]];
       if (tmp && tmp.length) {
-        items.push(...tmp)
+        items.push(...tmp);
       }
     }
 
     items.sort(function (a, b) {
-      return b.addedAt - a.addedAt
-    })
+      return b.addedAt - a.addedAt;
+    });
 
-    const recentlyAddedListDom = this.getRecentlyAddedListDom(items)
+    const recentlyAddedListDom = this.getRecentlyAddedListDom(items);
     if (recentlyAddedListDom) {
-      wrapper.appendChild(recentlyAddedListDom)
+      wrapper.appendChild(recentlyAddedListDom);
     }
 
-    return wrapper
+    return wrapper;
   },
 
-  getSeperateDisplayDom () {
-    const types = this.config.types
-    const wrapper = document.createElement('div')
+  getSeperateDisplayDom() {
+    const types = this.config.types;
+    const wrapper = document.createElement('div');
 
     for (const type in types) {
-      const items = this.recentlyAdded[types[type]]
-      const recentlyAddedListDom = this.getRecentlyAddedListDom(items)
+      const items = this.recentlyAdded[types[type]];
+      const recentlyAddedListDom = this.getRecentlyAddedListDom(items);
       if (recentlyAddedListDom) {
-        wrapper.appendChild(recentlyAddedListDom)
+        wrapper.appendChild(recentlyAddedListDom);
       }
     }
 
-    return wrapper
+    return wrapper;
   },
 
-  getThumbUrl (item) {
-    let key = 'thumb'
+  getThumbUrl(item) {
+    let key = 'thumb';
     if (item.type === 'episode' || item.type === 'season') {
-      key = 'parentThumb'
+      key = 'parentThumb';
       if (item.grandparentThumb) {
-        key = 'grandparentThumb'
+        key = 'grandparentThumb';
       }
     }
 
-    const url = new URL(`http://${this.config.hostname}:${this.config.port}${item[key]}`)
+    const url = new URL(
+      `http://${this.config.hostname}:${this.config.port}${item[key]}`,
+    );
     if (this.config.token) {
-      url.searchParams.append('X-Plex-Token', this.config.token)
+      url.searchParams.append('X-Plex-Token', this.config.token);
     }
-    return url.href
+    return url.href;
   },
 
-  appendMetadataField (element, item, field) {
-    let fieldValue = item[field]
+  appendMetadataField(element, item, field) {
+    let fieldValue = item[field];
     if (fieldValue) {
       if (field === 'addedAt') {
-        fieldValue = `${this.timeSince(new Date(fieldValue * 1000))} ago`
+        fieldValue = `${this.timeSince(new Date(fieldValue * 1000))} ago`;
       }
-      const div = document.createElement('div')
-      div.classList.add(field)
-      div.innerText = fieldValue
-      element.appendChild(div)
+      const div = document.createElement('div');
+      div.classList.add(field);
+      div.innerText = fieldValue;
+      element.appendChild(div);
     }
   },
 
-  timeSince (date) {
-    const seconds = Math.floor((new Date() - date) / 1000)
-    let interval = seconds / 31536000
+  timeSince(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    let interval = seconds / 31536000;
 
     if (interval > 1) {
-      return `${Math.floor(interval)} years`
+      return `${Math.floor(interval)} years`;
     }
-    interval = seconds / 2592000
+    interval = seconds / 2592000;
     if (interval > 1) {
-      return `${Math.floor(interval)} months`
+      return `${Math.floor(interval)} months`;
     }
-    interval = seconds / 86400
+    interval = seconds / 86400;
     if (interval > 1) {
-      return `${Math.floor(interval)} days`
+      return `${Math.floor(interval)} days`;
     }
-    interval = seconds / 3600
+    interval = seconds / 3600;
     if (interval > 1) {
-      return `${Math.floor(interval)} hours`
+      return `${Math.floor(interval)} hours`;
     }
-    interval = seconds / 60
+    interval = seconds / 60;
     if (interval > 1) {
-      return `${Math.floor(interval)} minutes`
+      return `${Math.floor(interval)} minutes`;
     }
-    return `${Math.floor(seconds)} seconds`
+    return `${Math.floor(seconds)} seconds`;
   },
 
-  getMetadataDom (item) {
-    const type = item.type
+  getMetadataDom(item) {
+    const type = item.type;
 
-    const metadataDom = document.createElement('div')
-    metadataDom.classList.add('metadata')
-    metadataDom.classList.add(type)
+    const metadataDom = document.createElement('div');
+    metadataDom.classList.add('metadata');
+    metadataDom.classList.add(type);
 
     if (type === 'episode') {
-      this.appendMetadataField(metadataDom, item, 'grandparentTitle')
-      this.appendMetadataField(metadataDom, item, 'title')
+      this.appendMetadataField(metadataDom, item, 'grandparentTitle');
+      this.appendMetadataField(metadataDom, item, 'title');
       if (this.config.displayTimeAgo) {
-        this.appendMetadataField(metadataDom, item, 'addedAt')
+        this.appendMetadataField(metadataDom, item, 'addedAt');
       }
-      const SeasonEpisodeDom = document.createElement('div')
-      SeasonEpisodeDom.classList.add('SeasonEpisode')
-      SeasonEpisodeDom.innerText = `S${item.parentIndex}E${item.index}`
-      metadataDom.appendChild(SeasonEpisodeDom)
-      return metadataDom
+      const SeasonEpisodeDom = document.createElement('div');
+      SeasonEpisodeDom.classList.add('SeasonEpisode');
+      SeasonEpisodeDom.innerText = `S${item.parentIndex}E${item.index}`;
+      metadataDom.appendChild(SeasonEpisodeDom);
+      return metadataDom;
     }
 
     if (type === 'season') {
-      this._appendMetadataField(metadataDom, item, 'parentTitle')
-      const SeasonEpisodeDom = document.createElement('div')
-      SeasonEpisodeDom.classList.add('SeasonEpisode')
-      SeasonEpisodeDom.innerText = `${item.leafCount} Episodes`
-      metadataDom.appendChild(SeasonEpisodeDom)
+      this._appendMetadataField(metadataDom, item, 'parentTitle');
+      const SeasonEpisodeDom = document.createElement('div');
+      SeasonEpisodeDom.classList.add('SeasonEpisode');
+      SeasonEpisodeDom.innerText = `${item.leafCount} Episodes`;
+      metadataDom.appendChild(SeasonEpisodeDom);
 
-      return metadataDom
+      return metadataDom;
     }
 
-    this.appendMetadataField(metadataDom, item, 'title')
+    this.appendMetadataField(metadataDom, item, 'title');
     if (this.config.displayTimeAgo) {
-      this.appendMetadataField(metadataDom, item, 'addedAt')
+      this.appendMetadataField(metadataDom, item, 'addedAt');
     }
-    this.appendMetadataField(metadataDom, item, 'year')
+    this.appendMetadataField(metadataDom, item, 'year');
 
-    return metadataDom
+    return metadataDom;
   },
 
-  getItemDom (item) {
-    const itemDom = document.createElement('li')
-    itemDom.classList.add('item')
+  getItemDom(item) {
+    const itemDom = document.createElement('li');
+    itemDom.classList.add('item');
 
-    const posterDom = document.createElement('div')
-    posterDom.classList.add('poster')
+    const posterDom = document.createElement('div');
+    posterDom.classList.add('poster');
 
-    const thumbUrl = this.getThumbUrl(item)
-    posterDom.style.backgroundImage = `url(${thumbUrl})`
+    const thumbUrl = this.getThumbUrl(item);
+    posterDom.style.backgroundImage = `url(${thumbUrl})`;
 
-    posterDom.style.backgroundSize = 'cover'
-    itemDom.appendChild(posterDom)
+    posterDom.style.backgroundSize = 'cover';
+    itemDom.appendChild(posterDom);
 
-    const metadataDom = this.getMetadataDom(item)
+    const metadataDom = this.getMetadataDom(item);
     if (metadataDom) {
-      itemDom.appendChild(metadataDom)
+      itemDom.appendChild(metadataDom);
     }
-    return itemDom
+    return itemDom;
   },
 
-  getRecentlyAddedListDom (items) {
+  getRecentlyAddedListDom(items) {
     if (!items || !items.length) {
-      return null
+      return null;
     }
 
-    const libraryDom = document.createElement('ul')
-    libraryDom.classList.add('recentlyAddedList')
+    const libraryDom = document.createElement('ul');
+    libraryDom.classList.add('recentlyAddedList');
 
-    const self = this
+    const self = this;
     items.forEach(function (item) {
-      const itemDom = self.getItemDom(item)
+      const itemDom = self.getItemDom(item);
 
-      libraryDom.appendChild(itemDom)
-    })
+      libraryDom.appendChild(itemDom);
+    });
 
-    return libraryDom
-  }
-})
+    return libraryDom;
+  },
+});

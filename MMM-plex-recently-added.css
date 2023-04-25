@@ -2,7 +2,7 @@
   width: 100%;
   height: 266px;
   overflow: hidden;
-  color: #FFF;
+  color: #fff;
   list-style: none;
   padding: 0;
 
@@ -35,6 +35,7 @@
 }
 
 .MMM-plex-recently-added .item .movie .title,
-.MMM-plex-recently-added .item .episode .grandparentTitle, .MMM-plex-recently-added .item .season .parentTitle {
+.MMM-plex-recently-added .item .episode .grandparentTitle,
+.MMM-plex-recently-added .item .season .parentTitle {
   font-weight: 600;
 }
