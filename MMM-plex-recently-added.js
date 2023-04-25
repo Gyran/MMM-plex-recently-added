@@ -9,6 +9,15 @@ const DisplayTypes = {
   SEPARATE: 'separate',
 };
 
+// "dumb" function that just adds an 's'
+// if interval is not 1 when floored.
+// Simplify pluralizing time since etc. "month" "months"
+const pluralizeInterval = (interval, word) => {
+  const floored = Math.floor(interval);
+
+  return `${floored} ${word}${floored !== 1 ? 's' : ''}`;
+};
+
 Module.register('MMM-plex-recently-added', {
   recentlyAdded: {},
 
@@ -142,25 +151,25 @@ Module.register('MMM-plex-recently-added', {
     let interval = seconds / 31536000;
 
     if (interval > 1) {
-      return `${Math.floor(interval)} years`;
+      return pluralizeInterval(interval, 'year');
     }
     interval = seconds / 2592000;
     if (interval > 1) {
-      return `${Math.floor(interval)} months`;
+      return pluralizeInterval(interval, 'month');
     }
     interval = seconds / 86400;
     if (interval > 1) {
-      return `${Math.floor(interval)} days`;
+      return pluralizeInterval(interval, 'day');
     }
     interval = seconds / 3600;
     if (interval > 1) {
-      return `${Math.floor(interval)} hours`;
+      return pluralizeInterval(interval, 'hour');
     }
     interval = seconds / 60;
     if (interval > 1) {
-      return `${Math.floor(interval)} minutes`;
+      return pluralizeInterval(interval, 'minute');
     }
-    return `${Math.floor(seconds)} seconds`;
+    return pluralizeInterval(interval, 'second');
   },
 
   getMetadataDom(item) {
@@ -185,6 +194,10 @@ Module.register('MMM-plex-recently-added', {
 
     if (type === 'season') {
       this.appendMetadataField(metadataDom, item, 'parentTitle');
+      if (this.config.displayTimeAgo) {
+        this.appendMetadataField(metadataDom, item, 'addedAt');
+      }
+      this.appendMetadataField(metadataDom, item, 'title');
       const SeasonEpisodeDom = document.createElement('div');
       SeasonEpisodeDom.classList.add('SeasonEpisode');
       SeasonEpisodeDom.innerText = `${item.leafCount} Episodes`;
