@@ -3,28 +3,21 @@ module.exports = {
     browser: true,
     commonjs: true,
     es2022: true,
-    node: true
+    node: true,
   },
   globals: {
     config: true,
     Log: true,
     MM: true,
     Module: true,
-    moment: true
+    moment: true,
   },
-  extends: 'standard',
-  overrides: [
-  ],
+  extends: ['eslint:recommended', 'prettier'],
   parserOptions: {
-    ecmaVersion: 'latest'
+    ecmaVersion: 'latest',
   },
-  rules: {
-    eqeqeq: 'error',
-    'import/order': 'error',
-    'no-prototype-builtins': 'off',
-    'no-throw-literal': 'error',
-    'no-useless-return': 'error',
-    'prefer-template': 'error',
-    'no-console': 'warn'
-  }
-}
+  rules: [
+    // I tend to leave unused vars for "completeness" for example in function signatures
+    ['no-unused-vars', 'off'],
+  ],
+};
