@@ -62,6 +62,24 @@ module.exports = NodeHelper.create({
     if (notification === Notifications.CONFIG && !this.client) {
       this.config = payload;
 
+      // validate types
+      for (const type of payload.types) {
+        // Check if deprecated
+        if (type === 'season') {
+          Log.warn(
+            `${this.name}: Deprecated type 'season' found in types, please use '${Types.TV}' instead`,
+          );
+        } else if (type === 'episode') {
+          Log.warn(
+            `${this.name}: Deprecated type 'episode' found in types, please use '${Types.TV}' instead`,
+          );
+        } else if (!Types[type]) {
+          Log.error(
+            `${this.name}: Invalid type '${type}' found. Please check your config`,
+          );
+        }
+      }
+
       // Process fetch for the first time
       this.process();
     }
@@ -76,7 +94,7 @@ module.exports = NodeHelper.create({
   },
 
   process() {
-    for (const type of this.config.types) {
+    for (const type of Object.values(Types)) {
       this.fetchFromPlex(type);
     }
 
