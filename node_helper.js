@@ -1,7 +1,6 @@
 const http = require('node:http');
 const NodeHelper = require('node_helper');
 const Log = require('logger');
-const { XMLParser } = require('fast-xml-parser');
 
 const ONE_MINUTE_MS = 60 * 1000;
 const TEN_MINUTES_MS = 10 * ONE_MINUTE_MS;
@@ -15,32 +14,39 @@ const Notifications = {
 
 const Types = {
   MOVIE: 'movie',
-  TV: 'tv',
+  EPISODE: 'episode',
+  SEASON: 'season',
 };
 
 const PlexTypes = {
   [Types.MOVIE]: '1',
-  [Types.TV]: '2',
+  [Types.EPISODE]: '2',
+  [Types.SEASON]: '2',
 };
 
-const fetchData = (url, options = {}) => {
+const fetchData = (url) => {
   return new Promise((resolve, reject) => {
     http
-      .get(url, options, (res) => {
-        let responseBody = '';
+      .get(
+        url,
+        {
+          headers: {
+            Accept: 'application/json',
+          },
+        },
+        (res) => {
+          let responseBody = '';
 
-        res.on('data', (chunk) => {
-          responseBody += chunk;
-        });
-
-        res.on('end', () => {
-          const parser = new XMLParser({
-            ignoreAttributes: false,
-            attributeNamePrefix: '',
+          res.on('data', (chunk) => {
+            responseBody += chunk;
           });
-          resolve(parser.parse(responseBody, 'text/xml'));
-        });
-      })
+
+          res.on('end', () => {
+            const data = JSON.parse(responseBody);
+            resolve(data);
+          });
+        },
+      )
       .on('error', (err) => {
         reject(err);
       });
@@ -64,19 +70,8 @@ module.exports = NodeHelper.create({
 
       // validate types
       for (const type of payload.types) {
-        // Check if deprecated
-        if (type === 'season') {
-          Log.warn(
-            `${this.name}: Deprecated type 'season' found in types, please use '${Types.TV}' instead`,
-          );
-        } else if (type === 'episode') {
-          Log.warn(
-            `${this.name}: Deprecated type 'episode' found in types, please use '${Types.TV}' instead`,
-          );
-        } else if (!Types[type]) {
-          Log.error(
-            `${this.name}: Invalid type '${type}' found. Please check your config`,
-          );
+        if (!Object.values(Types).includes(type)) {
+          Log.error(`${this.name}: Invalid type '${type}' found`);
         }
       }
 
@@ -94,7 +89,7 @@ module.exports = NodeHelper.create({
   },
 
   process() {
-    for (const type of Object.values(Types)) {
+    for (const type of this.config.types) {
       this.fetchFromPlex(type);
     }
 
@@ -104,6 +99,10 @@ module.exports = NodeHelper.create({
 
   async fetchFromPlex(type) {
     const plexType = PlexTypes[type];
+    if (plexType === undefined) {
+      throw new Error(`Can not determine plex type for type '${type}'`);
+    }
+
     const url = new URL(
       `http://${this.config.hostname}:${this.config.port}/hubs/home/recentlyAdded`,
     );
@@ -115,27 +114,17 @@ module.exports = NodeHelper.create({
     Log.info(`${this.name}: fetching ${url}`);
 
     try {
-      const data = await fetchData(url, {
-        headers: {
-          'X-Plex-Container-Start': '0',
-          'X-Plex-Container-Size': this.config.limit * 2, // fetch a few more so that we hopefully get enough
-        },
-      });
-      if (
-        !data ||
-        !data.MediaContainer ||
-        !data.MediaContainer.Video ||
-        !data.MediaContainer.Video.length
-      ) {
-        throw new Error(`No items found for ${type}, check Plex Token`);
-      }
+      const data = await fetchData(url);
 
       const now = new Date();
-      let newerThanDate = new Date(
-        now.getTime() - this.config.newerThanDay * ONE_DAY_MS,
-      );
+      let newerThanDate =
+        this.config.newerThanDay > 0
+          ? new Date(now.getTime() - this.config.newerThanDay * ONE_DAY_MS)
+          : new Date(0);
 
-      const items = data.MediaContainer.Video.filter((item) => {
+      const items = data.MediaContainer.Metadata.filter(
+        (item) => item.type === type,
+      ).filter((item) => {
         const itemAddedDate = new Date(item.addedAt * 1000);
 
         return itemAddedDate >= newerThanDate;

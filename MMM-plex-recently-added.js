@@ -14,12 +14,12 @@ Module.register('MMM-plex-recently-added', {
 
   defaults: {
     updateIntervalInMinute: 60,
-    types: ['movie', 'tv'],
+    types: ['movie', 'episode', 'season'],
     displayTimeAgo: false,
     displayType: DisplayTypes.MIXED,
     limit: 20,
     token: '',
-    newerThanDay: 30,
+    newerThanDay: 0,
     hostname: '127.0.0.1',
     port: '32400',
   },
@@ -184,7 +184,7 @@ Module.register('MMM-plex-recently-added', {
     }
 
     if (type === 'season') {
-      this._appendMetadataField(metadataDom, item, 'parentTitle');
+      this.appendMetadataField(metadataDom, item, 'parentTitle');
       const SeasonEpisodeDom = document.createElement('div');
       SeasonEpisodeDom.classList.add('SeasonEpisode');
       SeasonEpisodeDom.innerText = `${item.leafCount} Episodes`;
