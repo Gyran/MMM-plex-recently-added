@@ -1,9 +1,11 @@
 module.exports = {
   env: {
     browser: true,
-    commonjs: true,
-    es2022: true,
     node: true,
+    // seems to most closely match node 12 which we want to support
+    // because https://hub.docker.com/r/bastilimbach/docker-magicmirror
+    // seems to be the most used docker image and that runs on node 12
+    es2019: true,
   },
   globals: {
     config: true,
@@ -13,11 +15,8 @@ module.exports = {
     moment: true,
   },
   extends: ['eslint:recommended', 'prettier'],
-  parserOptions: {
-    ecmaVersion: 'latest',
-  },
-  rules: [
+  rules: {
     // I tend to leave unused vars for "completeness" for example in function signatures
-    ['no-unused-vars', 'off'],
-  ],
+    'no-unused-vars': 'off',
+  },
 };
