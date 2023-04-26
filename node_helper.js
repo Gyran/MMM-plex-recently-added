@@ -1,4 +1,4 @@
-const http = require('node:http');
+const http = require('http');
 const NodeHelper = require('node_helper');
 const Log = require('logger');
 
