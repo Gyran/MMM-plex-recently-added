@@ -1,4 +1,6 @@
 const http = require('http');
+
+// only available in MagicMirror context
 const NodeHelper = require('node_helper');
 const Log = require('logger');
 
