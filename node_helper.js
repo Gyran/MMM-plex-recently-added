@@ -36,7 +36,7 @@ const fetchData = (url) => {
         (res) => {
           let responseBody = '';
 
-          res?.on('data', (chunk) => {
+          res.on('data', (chunk) => {
             responseBody += chunk;
           });
 
